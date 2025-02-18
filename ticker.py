@@ -10,14 +10,15 @@ tickers = sp500["Symbol"].tolist()
 # 用 yf 爬 ROA 與 P/E ratio
 fundamentals = {}
 
-for ticker in tickers[:50]:  # 測試先爬前 50 檔，避免速度太慢
+for ticker in tickers:  # 測試先爬前 50 檔，避免速度太慢
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
-        pe_ratio = info.get("forwardPE", None)
+        trailing_pe = info.get("trailingPE", None)
+        forward_pe = info.get("forwardPE", None)
         roa = info.get("returnOnAssets", None)  # Yahoo Finance 的 ROA 是小數（如 0.12 表示 12%）
 
-        fundamentals[ticker] = {"PE": pe_ratio, "ROA": roa * 100 if roa else None}
+        fundamentals[ticker] = {"trailingPE": trailing_pe, "forwardPE": forward_pe, "ROA": roa * 100 if roa else None}
     except Exception as e:
         print(f"無法獲取 {ticker} 的資料: {e}")
 
@@ -25,3 +26,11 @@ for ticker in tickers[:50]:  # 測試先爬前 50 檔，避免速度太慢
 
 fund_df = pd.DataFrame(fundamentals).T
 print(fund_df.head())
+
+pe_avg = fund_df["forwardPE"].dropna().mean()
+roa_avg = fund_df["ROA"].dropna().mean()
+
+# filtered_stocks = fund_df[(fund_df["PE"] < pe_avg) & (fund_df["ROA"] > roa_avg)]
+filtered_stocks = fund_df[(fund_df["forwardPE"] < 15) & (fund_df["ROA"] > 10)]
+filtered_tickers = filtered_stocks.index.tolist()
+print(f"篩選後的股票：{filtered_tickers}")
