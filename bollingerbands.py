@@ -5,7 +5,7 @@ import talib
 
 # 下載歷史數據
 ticker = "AAPL"
-data = yf.download(ticker, start="2022-01-01", end="2024-01-01")
+data = yf.download(tickers=ticker, start="2022-01-01", end="2024-01-01")
 
 # 計算布林通道
 data['Middle_Band'] = data['Close'].rolling(window=20).mean()
@@ -15,13 +15,13 @@ data['Lower_Band'] = data['Middle_Band'] - (2 * data['Std_Dev'])
 data['BB_Width'] = (data['Upper_Band'] - data['Lower_Band']) / data['Middle_Band']
 
 # 計算 MACD
-data['MACD'], data['Signal'], _ = talib.MACD(data['Close'], fastperiod=12, slowperiod=26, signalperiod=9)
+data['MACD'], data['Signal'], _ = talib.MACD(np.ravel(data['Close'].values), fastperiod=12, slowperiod=26, signalperiod=9)
 
 # 計算 RSI
-data['RSI'] = talib.RSI(data['Close'], timeperiod=14)
+data['RSI'] = talib.RSI(np.ravel(data['Close'].values), timeperiod=14)
 
 # 計算 KD (Stochastic)
-data['K'], data['D'] = talib.STOCH(data['High'], data['Low'], data['Close'], fastk_period=14, slowk_period=3, slowd_period=3)
+data['K'], data['D'] = talib.STOCH(np.ravel(data['High'].values), np.ravel(data['Low'].values), np.ravel(data['Close'].values), fastk_period=14, slowk_period=3, slowd_period=3)
 
 # 判斷市場類型
 data['Trend_Market'] = (data['BB_Width'] > 0.05) & (abs(data['MACD']) > abs(data['Signal']))
